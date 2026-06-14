@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>המסלול אל רחוב הציפורים 78 - משחק לוח חינוכי</title>
+    <style>
+        :root {
+            --bg-color: #f4f4f9;
+            --text-color: #333;
+            --primary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --start-color: #f1c40f;
+            --end-color: #2ecc71;
+            
+            /* צבעי הדמויות */
+            --alex-color: #3498db;
+            --sheleg-color: #e67e22;
+            --builder-color: #9b59b6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        header h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        header p {
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        /* לוח הבקרה העליון */
+        .control-panel {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 1000px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .turn-indicator {
+            font-size: 1.4rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .current-player-badge {
+            padding: 6px 15px;
+            border-radius: 20px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .dice-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .dice {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border: 3px solid var(--primary-color);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+            transition: transform 0.1s ease, background-color 0.2s;
+        }
+
+        .dice:hover {
+            background-color: #f0f0f0;
+        }
+
+        .dice.rolling {
+            animation: roll 0.5s infinite linear;
+        }
+
+        @keyframes roll {
+            0% { transform: rotate(0deg) scale(0.9); }
+            50% { transform: rotate(180deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(0.9); }
+        }
+
+        .btn {
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1a252f;
+        }
+
+        .btn-reset {
+            background-color: #7f8c8d;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background-color: #95a5a6;
+        }
+
+        /* מקרא דמויות */
+        .legend {
+            display: flex;
+            gap: 15px;
+            background: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 1000px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .mini-token {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* לוח המשחק */
+        .board {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 1000px;
+            margin-bottom: 30px;
+        }
+
+        .cell {
+            background: white;
+            border: 2px solid #bdc3c7;
+            border-radius: 12px;
+            height: 110px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 8px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.04);
+            transition: all 0.3s ease;
+        }
+
+        .cell-number {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #7f8c8d;
+            align-self: flex-start;
+        }
+
+        .cell-label {
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 2px;
+            color: #333;
+        }
+
+        /* משבצות מיוחדות */
+        .cell-0 {
+            background-color: #fef9e7;
+            border-color: var(--start-color);
+            border-width: 3px;
+        }
+        .cell-0 .cell-number { color: #b7950b; }
+
+        .cell-20 {
+            background-color: #eafaf1;
+            border-color: var(--end-color);
+            border-width: 3px;
+        }
+        .cell-20 .cell-number { color: #1e8449; }
+
+        /* אזור כלי המשחק בתוך המשבצת */
+        .tokens-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            margin-top: auto;
+            margin-bottom: 5px;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .token {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.7rem;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .token:hover::after {
+            content: attr(data-name);
+            position: absolute;
+            bottom: 28px;
+            right: 50%;
+            transform: translateX(50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            z-index: 10;
+        }
+
+        /* חלונית שאלה (Modal Overlay) */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background: white;
+            width: 90%;
+            max-width: 650px;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+
+        .overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal-category {
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            color: var(--accent-color);
+            font-weight: bold;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .modal-player-action {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            background: #f0f4f8;
+            padding: 8px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .modal-question {
+            font-size: 1.6rem;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            line-height: 1.5;
+            font-weight: 600;
+        }
+
+        .teacher-instructions {
+            font-size: 1rem;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            border-top: 1px dashed #ccc;
+            padding-top: 15px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .btn-correct {
+            background-color: var(--end-color);
+            color: white;
+        }
+        .btn-correct:hover { background-color: #27ae60; }
+
+        .btn-wrong {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        .btn-wrong:hover { background-color: #c0392b; }
+
+        /* מסך ניצחון */
+        .win-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--end-color);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .win-screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .win-screen h2 {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .win-screen p {
+            font-size: 1.8rem;
+            margin-bottom: 35px;
+            max-width: 600px;
+        }
+
+        /* רספונסיביות למקרנים ומסכים קטנים */
+        @media (max-width: 768px) {
+            .board {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            .cell {
+                height: 90px;
+            }
+            header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>המסלול אל רחוב הציפורים 78</h1>
+        <p>משחק לוח כיתתי אינטראקטיבי בעקבות ספרו של אורי אורלב</p>
+    </header>
+
+    <div class="legend">
+        <div class="legend-item">
+            <span class="mini-token" style="background-color: var(--alex-color);"></span>
+            <strong>🎒 אלכס:</strong> גיבור הסיפור, שורד לבדו בגטו.
+        </div>
+        <div class="legend-item">
+            <span class="mini-token" style="background-color: var(--sheleg-color);"></span>
+            <strong>🐭 שלג:</strong> העכבר הנאמן, נקודת האור והחברות.
+        </div>
+        <div class="legend-item">
+            <span class="mini-token" style="background-color: var(--builder-color);"></span>
+            <strong>🧱 הבנאי:</strong> מייצג תושייה, המצאה ובניית מחבוא.
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <div class="turn-indicator">
+            תור השחקן: 
+            <span id="current-player-display" class="current-player-badge">אלכס</span>
+        </div>
+
+        <div class="dice-area">
+            <button class="btn btn-primary" id="roll-btn">הטל קובייה 🎲</button>
+            <div class="dice" id="dice-view">-</div>
+        </div>
+
+        <button class="btn btn-reset" id="reset-btn">אתחל משחק מחדש 🔄</button>
+    </div>
+
+    <div class="board" id="game-board">
+        </div>
+
+    <div class="overlay" id="question-overlay">
+        <div class="modal">
+            <div class="modal-category" id="q-category">קטגוריה</div>
+            <div class="modal-player-action" id="q-action-text">שחקן נע זמנית...</div>
+            <div class="modal-question" id="q-text">כאן תופיע שאלת העומק המיועדת לכיתה?</div>
+            
+            <div class="teacher-instructions">
+                <strong>💡 הנחיה למורה:</strong> הקרא את השאלה לכיתה ונהל דיון קצר. אשר את התוצאה לפי תגובת הקבוצה.
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn btn-correct" id="ans-correct-btn">ענו נכון ✅ (הישאר במשבצת)</button>
+                <button class="btn btn-wrong" id="ans-wrong-btn">טעו ❌ (חזור צעד אחד אחורה)</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="win-screen" id="win-screen">
+        <h2>🎉 ניצחון מוחלט! 🎉</h2>
+        <p id="win-message">השחקן הגיע בהצלחה לרחוב הציפורים 78!</p>
+        <button class="btn btn-primary" style="background: white; color: var(--end-color); font-size: 1.3rem;" id="win-restart-btn">שחקו שוב 🎮</button>
+    </div>
+
+    <script>
+        // --- בנק השאלות המלא לפי האפיון ---
+        const questionBank = [
+            {
+                category: "חלק א': טקטיקות הישרדות וחוש תושייה",
+                text: "מהן השיטות היצירתיות שאלכס הגה או הפעיל כדי להעלות אספקה (אוכל, מים) לקומות העליונות של המבנה המופצץ מבלי להיתפס?"
+            },
+            {
+                category: "חלק א': טקטיקות הישרדות וחוש תושייה",
+                text: "כיצד הצליח אלכס להשיג חומרי הסקה ודלק במהלך החורף הקשה, ואיך עשה זאת מבלי להסתכן ביציאה מיותרת לרחובות הגטו?"
+            },
+            {
+                category: "חלק ב': הבדידות והחיים במבנה 78",
+                text: "הסבירו את הניתוח המטאפורי של המפלט כ'אי בודד' בלב ים. אילו תכונות של הדירה ושל אורח החיים בה מתאימות לדימוי זה?"
+            },
+            {
+                category: "חלק ב': הבדידות והחיים במבנה 78",
+                text: "מהי משמעות המבט של אלכס מחלון הדירה אל 'הצד הפולני'? איזה ניגוד רגשי וקיומי מייצר מבט זה בין שני העולמות?"
+            },
+            {
+                category: "חלק ג': הקשר הרגשי עם העכבר 'שלג'",
+                text: "בספר קיימת אירוניה מבדחת או בלבול סביב שמו של העכבר 'שלג' לעומת מראהו האמיתי. מהו הניגוד בין השם למציאות הפיזית?"
+            },
+            {
+                category: "חלק ג': הקשר הרגשי עם העכבר 'שלג'",
+                text: "באילו מצבים רגשיים ספציפיים פונה אלכס אל שלג? מהו תפקידו הסימבולי של העכבר מעבר להיותו חיית מחמד פשוטה?"
+            },
+            {
+                category: "חלק ד': הציפייה הבלתי פוסקת לחזרת האב",
+                text: "מהו הטיעון הפנימי או ההבטחה שמנצחת תמיד ומניעה את אלכס מלברוח, להרים ידיים או להצטרף לאנשים אחרים המציעים לו מקלט?"
+            },
+            {
+                category: "חלק ד': הציפייה הבלתי פוסקת לחזרת האב",
+                text: "כיצד רגע הסיום המרגש של הספר מוכיח באופן סיפורי שהתקווה, הנאמנות והציפייה הממושכת של אלכס לא היו לחינם?"
+            }
+        ];
+
+        // --- הגדרות הדמויות והשחקנים ---
+        const players = [
+            { id: 0, name: "אלכס (תרמיל גב) 🎒", color: "var(--alex-color)", pos: 0 },
+            { id: 1, name: "שלג (העכבר) 🐭", color: "var(--sheleg-color)", pos: 0 },
+            { id: 2, name: "הבנאי (תושייה) 🧱", color: "var(--builder-color)", pos: 0 }
+        ];
+
+        let turnIndex = 0;
+        let isRolling = false;
+        let currentRoll = 0;
+        let targetPosition = 0;
+        let usedQuestions = [];
+
+        // אלמנטים מה-DOM
+        const boardEl = document.getElementById('game-board');
+        const currentPlayerDisplay = document.getElementById('current-player-display');
+        const rollBtn = document.getElementById('roll-btn');
+        const diceView = document.getElementById('dice-view');
+        const resetBtn = document.getElementById('reset-btn');
+        const questionOverlay = document.getElementById('question-overlay');
+        const qCategory = document.getElementById('q-category');
+        const qActionText = document.getElementById('q-action-text');
+        const qText = document.getElementById('q-text');
+        const ansCorrectBtn = document.getElementById('ans-correct-btn');
+        const ansWrongBtn = document.getElementById('ans-wrong-btn');
+        const winScreen = document.getElementById('win-screen');
+        const winMessage = document.getElementById('win-message');
+        const winRestartBtn = document.getElementById('win-restart-btn');
+
+        // --- בניית הלוח דינמית בסדר קריא (0 עד 20) ---
+        function createBoard() {
+            boardEl.innerHTML = '';
+            for (let i = 0; i <= 20; i++) {
+                const cell = document.createElement('div');
+                cell.className = `cell cell-${i}`;
+                cell.id = `cell-${i}`;
+                
+                // מספר משבצת
+                const numSpan = document.createElement('span');
+                numSpan.className = 'cell-number';
+                numSpan.innerText = i;
+                cell.appendChild(numSpan);
+
+                // כותרת למשבצות קצה
+                if (i === 0) {
+                    const label = document.createElement('div');
+                    label.className = 'cell-label';
+                    label.innerText = 'האקציה בגטו 🚪';
+                    cell.appendChild(label);
+                } else if (i === 20) {
+                    const label = document.createElement('div');
+                    label.className = 'cell-label';
+                    label.innerText = 'רחוב הציפורים 78 🕊️';
+                    cell.appendChild(label);
+                }
+
+                // מכל לכלי המשחק
+                const tokensContainer = document.createElement('div');
+                tokensContainer.className = 'tokens-container';
+                tokensContainer.id = `tokens-cell-${i}`;
+                cell.appendChild(tokensContainer);
+
+                boardEl.appendChild(cell);
+            }
+        }
+
+        // --- עדכון מיקום השחקנים על הלוח ויזואלית ---
+        function updateTokensDisplay() {
+            // ניקוי כל המשבצות קודם
+            for (let i = 0; i <= 20; i++) {
+                const container = document.getElementById(`tokens-cell-${i}`);
+                if (container) container.innerHTML = '';
+            }
+
+            // השמת הכלים במקומם הנוכחי
+            players.forEach(p => {
+                const container = document.getElementById(`tokens-cell-${p.pos}`);
+                if (container) {
+                    const token = document.createElement('div');
+                    token.className = 'token';
+                    token.style.backgroundColor = p.color;
+                    token.innerText = p.name.substring(0, 1); // האות הראשונה או האייקון
+                    token.setAttribute('data-name', p.name);
+                    container.appendChild(token);
+                }
+            });
+        }
+
+        // --- עדכון תצוגת השחקן הנוכחי בלוח הבקרה ---
+        function updateTurnIndicator() {
+            const activePlayer = players[turnIndex];
+            currentPlayerDisplay.innerText = activePlayer.name;
+            currentPlayerDisplay.style.backgroundColor = activePlayer.color;
+        }
+
+        // --- בחירת שאלה רנדומלית מבנק השאלות ללא חזרות רצופות ---
+        function getRandomQuestion() {
+            if (usedQuestions.length === questionBank.length) {
+                usedQuestions = []; // איפוס מאגר השאלות שנשאלו אם כולן נוצלו
+            }
+            
+            let availableQuestions = questionBank.filter(q => !usedQuestions.includes(q.text));
+            let selected = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+            
+            usedQuestions.push(selected.text);
+            return selected;
+        }
+
+        // --- לוגיקת הטלת הקובייה ---
+        function handleRoll() {
+            if (isRolling) return;
+            isRolling = true;
+            rollBtn.disabled = true;
+
+            const activePlayer = players[turnIndex];
+            diceView.classList.add('rolling');
+
+            let counter = 0;
+            const interval = setInterval(() => {
+                diceView.innerText = Math.floor(Math.random() * 6) + 1;
+                counter++;
+                if (counter > 8) {
+                    clearInterval(interval);
+                    
+                    // תוצאת אמת
+                    currentRoll = Math.floor(Math.random() * 6) + 1;
+                    diceView.innerText = currentRoll;
+                    diceView.classList.remove('rolling');
+                    
+                    processMovement(activePlayer, currentRoll);
+                }
+            }, 60);
+        }
+
+        // --- עיבוד תנועת השחקן וחוק ההגעה המדויקת ---
+        function processMovement(player, steps) {
+            targetPosition = player.pos + steps;
+
+            // חוק הגעה מדויקת: אם עבר את 20, הוא לא זז בכלל
+            if (targetPosition > 20) {
+                setTimeout(() => {
+                    alert(`🎲 ${player.name} קיבל ${steps}, אך נדרשת הגעה מדויקת למשבצת 20! השחקן נשאר במקום והתור עובר.`);
+                    isRolling = false;
+                    rollBtn.disabled = false;
+                    nextTurn();
+                }, 400);
+                return;
+            }
+
+            // הצגת חלונית השאלה
+            setTimeout(() => {
+                showQuestionModal(player, steps);
+            }, 400);
+        }
+
+        // --- הצגת שאלת עומק בכיתה ---
+        function showQuestionModal(player, steps) {
+            const q = getRandomQuestion();
+            qCategory.innerText = q.category;
+            qActionText.innerText = `השחקן ${player.name} מנסה להתקדם ממשבצת ${player.pos} למשבצת ${targetPosition} (צעד: ${steps})`;
+            qText.innerText = q.text;
+            
+            questionOverlay.classList.add('active');
+        }
+
+        // --- תגובת המורה: תשובה נכונה ---
+        function handleCorrectAnswer() {
+            const activePlayer = players[turnIndex];
+            activePlayer.pos = targetPosition; // התנועה מאושרת
+            
+            questionOverlay.classList.remove('active');
+            updateTokensDisplay();
+            
+            // בדיקת תנאי ניצחון
+            if (activePlayer.pos === 20) {
+                showWinScreen(activePlayer);
+            } else {
+                isRolling = false;
+                rollBtn.disabled = false;
+                nextTurn();
+            }
+        }
+
+        // --- תגובת המורה: תשובה שגויה ---
+        function handleWrongAnswer() {
+            const activePlayer = players[turnIndex];
+            
+            // עונש: המיקום החדש פחות משבצת אחת
+            let penalizedPos = targetPosition - 1;
+            if (penalizedPos < 0) penalizedPos = 0;
+            
+            activePlayer.pos = penalizedPos;
+            
+            alert(`❌ התשובה אינה מלאה או שגויה. השחקן נענש ונסוג למשבצת ${penalizedPos}`);
+            
+            questionOverlay.classList.remove('active');
+            updateTokensDisplay();
+            
+            isRolling = false;
+            rollBtn.disabled = false;
+            nextTurn();
+        }
+
+        // --- מעבר תור קבוע ומחזורי ---
+        function nextTurn() {
+            turnIndex = (turnIndex + 1) % players.length;
+            updateTurnIndicator();
+        }
+
+        // --- מסך ניצחון ---
+        function showWinScreen(winner) {
+            winMessage.innerHTML = `כל הכבוד! <strong>${winner.name}</strong> הגיע בדיוק למשבצת 20 המייצגת את המפגש המיוחל של אלכס עם אביו ברחוב הציפורים 78 ובכך סיים את המשימה בהצלחה!`;
+            winScreen.classList.add('active');
+        }
+
+        // --- אתחול ואיפוס המשחק ---
+        function resetGame() {
+            players.forEach(p => p.pos = 0);
+            turnIndex = 0;
+            isRolling = false;
+            currentRoll = 0;
+            targetPosition = 0;
+            diceView.innerText = '-';
+            rollBtn.disabled = false;
+            
+            questionOverlay.classList.remove('active');
+            winScreen.classList.remove('active');
+            
+            updateTurnIndicator();
+            updateTokensDisplay();
+        }
+
+        // --- האזנה לאירועים (Event Listeners) ---
+        rollBtn.addEventListener('click', handleRoll);
+        resetBtn.addEventListener('click', resetGame);
+        winRestartBtn.addEventListener('click', resetGame);
+        
+        ansCorrectBtn.addEventListener('click', handleCorrectAnswer);
+        ansWrongBtn.addEventListener('click', handleWrongAnswer);
+
+        // הפעלה ראשונית של המשחק
+        createBoard();
+        resetGame();
+    </script>
+</body>
+</html>
